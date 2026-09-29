@@ -65,7 +65,7 @@ function InventoryForm({ onClose, onSaved }) {
     if (!f.name || f.quantity === '') { toast('error', 'Item and quantity are required'); return; }
     setBusy(true);
     const { error } = await supabase.from('inventory').upsert(
-      { project_id: 'LUK54', name: f.name, quantity: Number(f.quantity) || 0, unit: f.unit || 'pcs' },
+      { project_id: 'JALO', name: f.name, quantity: Number(f.quantity) || 0, unit: f.unit || 'pcs' },
       { onConflict: 'project_id,name' });
     setBusy(false);
     if (error) toast('error', error.message);
@@ -140,7 +140,7 @@ function WorkerForm({ existing, onClose, onSaved }) {
   async function save() {
     if (!f.name) { toast('error', 'Worker name is required'); return; }
     setBusy(true);
-    const payload = { project_id: 'LUK54', name: f.name, payroll: Number(f.payroll) || 0, bonus: Number(f.bonus) || 0, advance: Number(f.advance) || 0, notes: f.notes || '' };
+    const payload = { project_id: 'JALO', name: f.name, payroll: Number(f.payroll) || 0, bonus: Number(f.bonus) || 0, advance: Number(f.advance) || 0, notes: f.notes || '' };
     const { error } = existing
       ? await supabase.from('workers').update(payload).eq('id', existing.id)
       : await supabase.from('workers').insert(payload);
@@ -213,7 +213,7 @@ function NoteForm({ onClose, onSaved }) {
   async function save() {
     if (!f.content) { toast('error', 'Note text is required'); return; }
     setBusy(true);
-    const { error } = await supabase.from('staff_notes').insert({ project_id: 'LUK54', date: f.date, content: f.content, category: f.category });
+    const { error } = await supabase.from('staff_notes').insert({ project_id: 'JALO', date: f.date, content: f.content, category: f.category });
     setBusy(false);
     if (error) toast('error', error.message);
     else { toast('success', 'Note saved'); onSaved(); }

@@ -30,7 +30,7 @@ alter table feed_inventory
 
 create table if not exists health_options (
   id uuid primary key default gen_random_uuid(),
-  project_id text not null default 'LUK54',
+  project_id text not null default 'JALO',
   kind text not null,
   value text not null,
   created_at timestamptz default now(),

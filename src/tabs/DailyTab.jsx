@@ -126,7 +126,7 @@ function DailyForm({ onClose, onSaved }) {
     const opening = Number(f.opening_birds) || 0;
     const mort = Number(f.mortality) || 0;
     const payload = {
-      project_id: 'LUK54',
+      project_id: 'JALO',
       date: f.date,
       section: f.section || 'Combined',
       opening_birds: opening,

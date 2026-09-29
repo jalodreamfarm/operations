@@ -151,7 +151,7 @@ function ScheduleForm({ existing, onClose, onSaved }) {
     if (!f.vaccine) { toast('error', 'Vaccine / disease name is required'); return; }
     setBusy(true);
     const payload = {
-      project_id: 'LUK54', week: f.week !== '' ? Number(f.week) : null,
+      project_id: 'JALO', week: f.week !== '' ? Number(f.week) : null,
       vaccine: f.vaccine, planned_date: f.planned_date || null,
       status: f.status, notes: f.notes || '',
     };
@@ -206,23 +206,23 @@ function HealthForm({ onClose, onSaved }) {
     if (type === ADD_NEW) {
       type = (f.customType || '').trim();
       if (!type) { toast('error', 'Enter the new type name'); return; }
-      await supabase.from('health_options').upsert({ project_id: 'LUK54', kind: 'Type', value: type }, { onConflict: 'project_id,kind,value' });
+      await supabase.from('health_options').upsert({ project_id: 'JALO', kind: 'Type', value: type }, { onConflict: 'project_id,kind,value' });
     }
     if (product === ADD_NEW || !product) {
       product = (f.customProduct || '').trim();
       if (!product) { toast('error', 'Enter the product name'); return; }
-      await supabase.from('health_options').upsert({ project_id: 'LUK54', kind: 'Product', value: product }, { onConflict: 'project_id,kind,value' });
+      await supabase.from('health_options').upsert({ project_id: 'JALO', kind: 'Product', value: product }, { onConflict: 'project_id,kind,value' });
     }
     if (!type || !product) { toast('error', 'Type and product required'); return; }
     setBusy(true);
     const { error } = await supabase.from('health_events').insert({
-      project_id: 'LUK54', date: f.date, type, product,
+      project_id: 'JALO', date: f.date, type, product,
       notes: f.notes || '',
     });
     if (!error && type === 'Vaccination' && f.week) {
       await supabase.from('vaccination_schedule')
         .update({ status: 'Completed' })
-        .eq('project_id', 'LUK54').eq('week', Number(f.week)).ilike('vaccine', product.split(' ')[0] + '%');
+        .eq('project_id', 'JALO').eq('week', Number(f.week)).ilike('vaccine', product.split(' ')[0] + '%');
     }
     setBusy(false);
     if (error) toast('error', error.message);

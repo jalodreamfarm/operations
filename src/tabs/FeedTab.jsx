@@ -146,7 +146,7 @@ function PurchaseForm({ inv, onClose, onSaved }) {
     setBusy(true);
     const qty = Number(f.qty_kg) || 0, unit = Number(f.unit_cost) || 0;
     const { error } = await supabase.from('feed_purchases').insert({
-      project_id: 'LUK54', date: f.date, product: f.product, qty_kg: qty,
+      project_id: 'JALO', date: f.date, product: f.product, qty_kg: qty,
       unit_cost: unit, total_cost: qty * unit, supplier: f.supplier || '',
     });
     if (error) { toast('error', error.message); setBusy(false); return; }
@@ -157,7 +157,7 @@ function PurchaseForm({ inv, onClose, onSaved }) {
         purchases: Number(existing.purchases || 0) + qty, unit_cost: unit,
       }).eq('id', existing.id);
     } else {
-      await supabase.from('feed_inventory').insert({ project_id: 'LUK54', product: f.product, closing_stock: qty, purchases: qty, unit_cost: unit });
+      await supabase.from('feed_inventory').insert({ project_id: 'JALO', product: f.product, closing_stock: qty, purchases: qty, unit_cost: unit });
     }
     setBusy(false);
     toast('success', 'Feed purchase recorded');
@@ -189,7 +189,7 @@ function MixForm({ onClose, onSaved }) {
   async function save() {
     if (!f.week_start) { toast('error', 'Week start is required'); return; }
     setBusy(true);
-    const payload = { project_id: 'LUK54', week_start: f.week_start, week_end: f.week_end || null, total_kg: total, notes: f.notes || '' };
+    const payload = { project_id: 'JALO', week_start: f.week_start, week_end: f.week_end || null, total_kg: total, notes: f.notes || '' };
     MIX_FIELDS.forEach(([k]) => { payload[k] = Number(f[k]) || 0; });
     const { error } = await supabase.from('weekly_feed_mix').insert(payload);
     setBusy(false);

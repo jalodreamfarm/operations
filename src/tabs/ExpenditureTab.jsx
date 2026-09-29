@@ -92,14 +92,14 @@ function ExpenseForm({ onClose, onSaved }) {
     let documentId = '';
     if (file) {
       setBusyLabel('Uploading…');
-      const path = 'LUK54/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = 'JALO/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const { error } = await supabase.storage.from('receipts').upload(path, file);
       if (error) { setBusy(false); toast('error', error.message || 'Upload failed'); return; }
       documentId = path;
       setBusyLabel('Saving…');
     }
     const { error } = await supabase.from('expenses').insert({
-      project_id: 'LUK54', date: f.date, category: f.category,
+      project_id: 'JALO', date: f.date, category: f.category,
       sub_category: f.sub_category || '', amount: Number(f.amount) || 0,
       supplier: f.supplier || '', document_id: documentId, notes: f.notes || '',
     });

@@ -99,7 +99,7 @@ function FlockForm({ onClose, onSaved }) {
     if (!f.date || !f.quantity) { toast('error', 'Date and quantity are required'); return; }
     setBusy(true);
     const { error } = await supabase.from('flock_events').insert({
-      project_id: 'LUK54', date: f.date, event_type: f.event_type,
+      project_id: 'JALO', date: f.date, event_type: f.event_type,
       quantity: Number(f.quantity) || 0, notes: f.notes || '',
     });
     setBusy(false);

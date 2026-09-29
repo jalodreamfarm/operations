@@ -94,7 +94,7 @@ function SaleForm({ onClose, onSaved }) {
     let documentId = '';
     if (file) {
       setBusyLabel('Uploading…');
-      const path = 'LUK54/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = 'JALO/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const { error } = await supabase.storage.from('receipts').upload(path, file);
       if (error) { setBusy(false); toast('error', error.message || 'Upload failed'); return; }
       documentId = path;
@@ -103,7 +103,7 @@ function SaleForm({ onClose, onSaved }) {
     const trays = Number(f.quantity_trays) || 0;
     const price = Number(f.unit_price) || 0;
     const { error } = await supabase.from('sales').insert({
-      project_id: 'LUK54', date: f.date, customer: f.customer || '',
+      project_id: 'JALO', date: f.date, customer: f.customer || '',
       quantity_trays: trays, quantity_eggs: trays * TRAY, unit_price: price,
       total_revenue: trays * price, sale_category: f.sale_category, egg_type: f.egg_type,
       payment_status: f.payment_status, payment_ref: f.payment_ref || '',

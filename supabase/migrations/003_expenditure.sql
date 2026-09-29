@@ -1,7 +1,7 @@
 -- 003_expenditure — mirrors original Finance Expenses (ExpenseID→uuid, Amount→amount, etc.)
 create table if not exists expenses (
   id uuid primary key default gen_random_uuid(),
-  project_id text not null default 'LUK54',
+  project_id text not null default 'JALO',
   date date not null,
   category text not null,
   sub_category text default '',
