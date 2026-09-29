@@ -133,7 +133,8 @@ export default function ReportsTab({ setActions }) {
           {mode === 'weekly' ? (
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Week (YYYY-Www)</label>
-              <input className="form-input" value={week} onChange={(e) => setWeek(e.target.value)} placeholder="2026-W40" />
+              <input className="form-input" value={week} onChange={(e) => setWeek(e.target.value)} placeholder="e.g. 2026-W40" />
+              <div className="form-hint">Type year, a dash, W plus 2-digit week number — e.g. 2026-W40 = Mon 28 Sep → Sun 4 Oct 2026.</div>
             </div>
           ) : (
             <div className="form-group" style={{ marginBottom: 0 }}>
