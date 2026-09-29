@@ -36,6 +36,14 @@ function weekRange(isoWeek) {
   return { start: iso(mon), end: iso(sun) };
 }
 
+function shiftWeek(isoWeek, delta) {
+  const r = weekRange(isoWeek);
+  if (!r) return isoWeek;
+  const d = new Date(r.start + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + delta * 7);
+  return isoWeekOf(d.toISOString().slice(0, 10));
+}
+
 function monthRange(ym) {
   if (!/^\d{4}-\d{2}$/.test(ym || '')) return null;
   const [y, mo] = ym.split('-').map(Number);
@@ -133,8 +141,15 @@ export default function ReportsTab({ setActions }) {
           {mode === 'weekly' ? (
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Week (YYYY-Www)</label>
-              <input className="form-input" value={week} onChange={(e) => setWeek(e.target.value)} placeholder="e.g. 2026-W40" />
-              <div className="form-hint">Type year, a dash, W plus 2-digit week number — e.g. 2026-W40 = Mon 28 Sep → Sun 4 Oct 2026.</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setWeek(shiftWeek(week, -1))}>◀ Prev</button>
+                <input className="form-input" value={week} onChange={(e) => setWeek(e.target.value)} placeholder="e.g. 2026-W40" style={{ flex: 1 }} />
+                <button className="btn btn-secondary btn-sm" onClick={() => setWeek(shiftWeek(week, 1))}>Next ▶</button>
+              </div>
+              <div className="form-hint">
+                {(() => { const r = weekRange(week); return r ? week + ' = ' + r.start + ' → ' + r.end + '.' : 'Type year, dash, W + 2-digit week — e.g. 2026-W40.'; })()}
+                {' '}Tap Prev for last week, or <button className="btn btn-ghost btn-sm" style={{ height: 'auto', padding: '0 4px' }} onClick={() => setWeek(currentWeek())}>This week</button>
+              </div>
             </div>
           ) : (
             <div className="form-group" style={{ marginBottom: 0 }}>
