@@ -31,6 +31,7 @@ function Shell() {
   const [auth, setAuth] = useState({ email: '', password: '' });
   const [authErr, setAuthErr] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('farmops_theme') || 'light');
   const [actions, setActions] = useState(null);
 
@@ -75,7 +76,21 @@ function Shell() {
             <form onSubmit={login}>
               {authErr && <div className="form-error-global">{authErr}</div>}
               <Field label="Email" type="email" required value={auth.email} onChange={(e) => setAuth({ ...auth, email: e.target.value })} />
-              <Field label="Password" type="password" required value={auth.password} onChange={(e) => setAuth({ ...auth, password: e.target.value })} />
+              <div className="form-group">
+                <label className="form-label">Password<span className="required">*</span></label>
+                <div className="password-field">
+                  <input className="form-input" type={showPw ? 'text' : 'password'} required
+                    value={auth.password} onChange={(e) => setAuth({ ...auth, password: e.target.value })} />
+                  <button type="button" className="password-toggle" aria-label={showPw ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPw(!showPw)}>
+                    {showPw ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="23" x2="23" y2="1" /></svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
               <button className="login-submit" disabled={authBusy}>{authBusy ? 'Signing in…' : 'Sign in'}</button>
             </form>
             <p className="login-secure">Secure access for your farm operations.</p>

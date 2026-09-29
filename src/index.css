@@ -178,6 +178,10 @@ body { margin: 0; font-family: var(--font-sans); background: var(--color-bg); co
 .login-submit:disabled { opacity: 0.72; cursor: not-allowed; }
 .login-secure { display: flex; align-items: center; justify-content: center; margin: 1.5rem 0 0; font-size: 0.75rem; color: #8a938c; }
 .form-error-global { margin-bottom: 0.75rem; padding: 0.65rem 0.75rem; border-radius: 8px; background: rgba(196,30,58,0.06); border: 1px solid rgba(196,30,58,0.18); font-size: 0.8125rem; color: #c41e3a; }
+.password-field { position: relative; display: flex; align-items: center; }
+.password-field .form-input { padding-right: 2.6rem; }
+.password-toggle { position: absolute; right: 0.35rem; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 7px; background: transparent; color: #7a847d; cursor: pointer; padding: 0; }
+.password-toggle:hover { color: #1b6b4a; background: rgba(27, 107, 74, 0.06); }
 @media (max-width: 900px) {
   .login-page { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 32vh) 1fr; }
   .login-visual { min-height: 200px; padding: 1.25rem 1.35rem; }
