@@ -6,6 +6,7 @@ import FlockTab from './tabs/FlockTab.jsx';
 import FeedTab from './tabs/FeedTab.jsx';
 import SalesTab from './tabs/SalesTab.jsx';
 import ExpenditureTab from './tabs/ExpenditureTab.jsx';
+import ReportsTab from './tabs/ReportsTab.jsx';
 import HealthTab from './tabs/HealthTab.jsx';
 import { InventoryTab, MortalityTab, NotesTab, WorkersTab } from './tabs/OtherTabs.jsx';
 
@@ -20,6 +21,7 @@ const TABS = [
   { id: 'inventory', label: 'Inventory' },
   { id: 'workers', label: 'Workers' },
   { id: 'notes', label: 'Staff Notes' },
+  { id: 'reports', label: 'Reports' },
 ];
 
 function Shell() {
@@ -122,6 +124,7 @@ function Shell() {
           {tab === 'inventory' && <InventoryTab setActions={setActions} />}
           {tab === 'workers' && <WorkersTab setActions={setActions} />}
           {tab === 'notes' && <NotesTab setActions={setActions} />}
+          {tab === 'reports' && <ReportsTab setActions={setActions} />}
         </div>
       </div>
     </>

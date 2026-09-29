@@ -182,6 +182,10 @@ body { margin: 0; font-family: var(--font-sans); background: var(--color-bg); co
   .login-page { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 32vh) 1fr; }
   .login-visual { min-height: 200px; padding: 1.25rem 1.35rem; }
 }
+@media print {
+  .top-strip, .tabs-bar, .page-header-actions { display: none !important; }
+  .page { max-width: none; padding: 0; }
+}
 @media (max-width: 639px) {
   .toast-root { left: var(--space-4); right: var(--space-4); }
   .toast { max-width: none; }
