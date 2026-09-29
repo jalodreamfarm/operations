@@ -10,7 +10,7 @@ const MIX_FIELDS = [
   ['broken_kg', 'Broken (kg)'], ['maize_kg', 'Maize (kg)'], ['others_kg', 'Others (kg)'],
 ];
 
-export default function FeedTab({ actionsRef }) {
+export default function FeedTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [inv, setInv] = useState([]);
@@ -45,13 +45,14 @@ export default function FeedTab({ actionsRef }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (actionsRef) actionsRef.current = (
+    setActions(
       <>
         <button className="btn btn-secondary btn-sm" onClick={() => setShowMix(true)}>Weekly mix</button>
         <button className="btn btn-primary btn-sm" onClick={() => setShowPurchase(true)}>+ Feed purchase</button>
       </>
     );
-  });
+    return () => setActions(null);
+  }, []);
 
   async function delPurchase(row) {
     const ok = await confirm({ title: 'Delete feed purchase', message: 'Delete this feed purchase? This cannot be undone.', confirmLabel: 'Delete', danger: true });

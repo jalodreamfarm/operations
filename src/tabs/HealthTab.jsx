@@ -6,14 +6,16 @@ import { Badge, DataTable, Field, Modal, useConfirm, useToast } from '../compone
 const DEFAULT_TYPES = ['Vaccination', 'Medication', 'Treatment', 'Other'];
 const DEFAULT_PRODUCTS = ['NEWCASTLE IB', 'GUMBOLO 1', 'GUMBOLO 2', 'NEWCASTLE PLAIN', 'FOWL POX', 'DEWORMING', 'DEBEAKING', 'FOWL TYPHOID', 'NEWCASTLE LASOTA', 'GLUCOVIT', 'ASHYTL', 'LIMOVIT', 'MACROLAN', 'COCCITOLTRAZOL', 'OXYVITAMIN', 'LEVACIDE', 'DISINFECTANT'];
 const ADD_NEW = '— Add new —';
+const SCHED_STATUSES = ['Pending', 'Completed', 'Recurring'];
 
-export default function HealthTab({ actionsRef }) {
+export default function HealthTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [sched, setSched] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showTreatment, setShowTreatment] = useState(false);
+  const [editingSched, setEditingSched] = useState(undefined);
 
   async function load() {
     setLoading(true);
@@ -28,15 +30,36 @@ export default function HealthTab({ actionsRef }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Log treatment</button>;
-  });
+    setActions(
+      <>
+        <button className="btn btn-secondary btn-sm" onClick={() => setEditingSched(null)}>+ Schedule item</button>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowTreatment(true)}>+ Log treatment</button>
+      </>
+    );
+    return () => setActions(null);
+  }, []);
 
-  async function onDelete(row) {
+  async function onDeleteTreatment(row) {
     const ok = await confirm({ title: 'Delete treatment', message: 'Delete this health record?', confirmLabel: 'Delete', danger: true });
     if (!ok) return;
     const { error } = await supabase.from('health_events').delete().eq('id', row.id);
     if (error) toast('error', error.message);
     else { toast('success', 'Record deleted'); load(); }
+  }
+
+  async function onDeleteSched(row) {
+    const ok = await confirm({ title: 'Delete schedule item', message: 'Delete "' + row.vaccine + '" (week ' + row.week + ')?', confirmLabel: 'Delete', danger: true });
+    if (!ok) return;
+    const { error } = await supabase.from('vaccination_schedule').delete().eq('id', row.id);
+    if (error) toast('error', error.message);
+    else { toast('success', 'Schedule item deleted'); load(); }
+  }
+
+  async function markDone(row) {
+    const next = row.status === 'Completed' ? 'Pending' : 'Completed';
+    const { error } = await supabase.from('vaccination_schedule').update({ status: next }).eq('id', row.id);
+    if (error) toast('error', error.message);
+    else { toast('success', row.vaccine + ' marked ' + next); load(); }
   }
 
   const now = new Date();
@@ -78,7 +101,18 @@ export default function HealthTab({ actionsRef }) {
               const s = r.status || 'Pending';
               return <Badge tone={s === 'Completed' ? 'positive' : s === 'Recurring' ? 'info' : 'caution'}>{s}</Badge>;
             } },
-          ]} rows={sched} emptyMessage="No schedule." />
+          ]} rows={sched}
+            actions={[
+              { id: 'done', label: 'Mark done' },
+              { id: 'edit', label: 'Edit' },
+              { id: 'delete', label: 'Delete', danger: true },
+            ]}
+            onAction={(a, row) => {
+              if (a === 'done') markDone(row);
+              if (a === 'edit') setEditingSched(row);
+              if (a === 'delete') onDeleteSched(row);
+            }}
+            emptyMessage="No schedule. Use + Schedule item to add one." />
         )}
       </div>
       <h3 className="u-text-sm u-font-semibold mb-3">Treatments & events</h3>
@@ -90,11 +124,61 @@ export default function HealthTab({ actionsRef }) {
           { key: 'n', label: 'Notes', accessor: (r) => r.notes || '—' },
         ]} rows={events}
           actions={[{ id: 'delete', label: 'Delete', danger: true }]}
-          onAction={(a, row) => { if (a === 'delete') onDelete(row); }}
+          onAction={(a, row) => { if (a === 'delete') onDeleteTreatment(row); }}
           emptyMessage="No treatments logged." />
       )}
-      {showForm && <HealthForm onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); load(); }} />}
+      {showTreatment && <HealthForm onClose={() => setShowTreatment(false)} onSaved={() => { setShowTreatment(false); load(); }} />}
+      {editingSched !== undefined && <ScheduleForm existing={editingSched}
+        onClose={() => setEditingSched(undefined)}
+        onSaved={() => { setEditingSched(undefined); load(); }} />}
     </>
+  );
+}
+
+function ScheduleForm({ existing, onClose, onSaved }) {
+  const toast = useToast();
+  const [f, setF] = useState({
+    week: existing ? String(existing.week ?? '') : '',
+    vaccine: existing ? existing.vaccine || '' : '',
+    planned_date: existing ? existing.planned_date || '' : todayEAT(),
+    status: existing ? existing.status || 'Pending' : 'Pending',
+    notes: existing ? existing.notes || '' : '',
+  });
+  const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+
+  async function save() {
+    if (!f.vaccine) { toast('error', 'Vaccine / disease name is required'); return; }
+    setBusy(true);
+    const payload = {
+      project_id: 'LUK54', week: f.week !== '' ? Number(f.week) : null,
+      vaccine: f.vaccine, planned_date: f.planned_date || null,
+      status: f.status, notes: f.notes || '',
+    };
+    const { error } = existing
+      ? await supabase.from('vaccination_schedule').update(payload).eq('id', existing.id)
+      : await supabase.from('vaccination_schedule').insert(payload);
+    setBusy(false);
+    if (error) toast('error', error.message);
+    else { toast('success', existing ? 'Schedule item updated' : 'Schedule item added'); onSaved(); }
+  }
+
+  return (
+    <Modal title={existing ? 'Edit schedule item' : 'Add schedule item'} onClose={onClose}
+      footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button></>}>
+      <div className="form-row">
+        <Field label="Week" type="number" value={f.week} onChange={set('week')} />
+        <Field label="Planned date" type="date" value={f.planned_date} onChange={set('planned_date')} />
+      </div>
+      <Field label="Vaccine / disease" required list="sched-vaccines" placeholder="Type any name — or pick from list"
+        value={f.vaccine} onChange={set('vaccine')} />
+      <datalist id="sched-vaccines">
+        {DEFAULT_PRODUCTS.map((p) => <option key={p} value={p} />)}
+      </datalist>
+      <Field label="Status" type="select" value={f.status} onChange={set('status')} options={SCHED_STATUSES} />
+      <Field label="Notes" type="textarea" value={f.notes} onChange={set('notes')} />
+    </Modal>
   );
 }
 
@@ -153,7 +237,7 @@ function HealthForm({ onClose, onSaved }) {
       <Field label="Type" type="select" required value={f.type} onChange={set('type')} options={[...types, ADD_NEW]} />
       {f.type === ADD_NEW && <Field label="New type (if adding)" hint="Only fill if you chose Add new" value={f.customType} onChange={set('customType')} />}
       <Field label="Product" type="select" required value={f.product} onChange={set('product')} options={['', ...products, ADD_NEW]} />
-      {(f.product === ADD_NEW || f.product === '') && <Field label="New product (if adding)" hint="Only fill if you chose Add new" value={f.customProduct} onChange={set('customProduct')} />}
+      {(f.product === ADD_NEW || f.product === '') && <Field label="New product (if adding)" hint="Only fill if you chose Add new — any disease or medicine name" value={f.customProduct} onChange={set('customProduct')} />}
       <Field label="Week" type="number" value={f.week} onChange={set('week')} />
       <Field label="Notes" type="textarea" value={f.notes} onChange={set('notes')} />
     </Modal>

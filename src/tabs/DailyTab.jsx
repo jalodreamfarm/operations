@@ -9,7 +9,7 @@ export function feedTotalKg(r) {
   return Number(r.feed_issued_kg || 0);
 }
 
-export default function DailyTab({ actionsRef }) {
+export default function DailyTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [rows, setRows] = useState([]);
@@ -26,8 +26,9 @@ export default function DailyTab({ actionsRef }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Log Day</button>;
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Log Day</button>);
+    return () => setActions(null);
+  }, []);
 
   async function onDelete(row) {
     const ok = await confirm({ title: 'Delete daily log', message: 'Delete the log for ' + (row.date || 'this day') + '? This cannot be undone.', confirmLabel: 'Delete', danger: true });

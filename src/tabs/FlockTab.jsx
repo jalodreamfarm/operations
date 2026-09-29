@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient.js';
 import { formatDate, formatNumber, todayEAT } from '../lib/format.js';
 import { DataTable, Field, Modal, useConfirm, useToast } from '../components/ui.jsx';
 
-export default function FlockTab({ actionsRef }) {
+export default function FlockTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [sections, setSections] = useState([]);
@@ -27,13 +27,9 @@ export default function FlockTab({ actionsRef }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (actionsRef) actionsRef.current = (
-      <>
-        <button className="btn btn-secondary btn-sm" disabled={saving} onClick={saveSections}>{saving ? 'Saving…' : 'Save sections'}</button>
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Flock event</button>
-      </>
-    );
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Flock event</button>);
+    return () => setActions(null);
+  }, []);
 
   const total = sections.reduce((s, r) => s + Number(r.bird_count || 0), 0);
 
@@ -71,6 +67,7 @@ export default function FlockTab({ actionsRef }) {
           <div className="card kpi-card"><div className="kpi-label">Total birds (all sections)</div>
             <div className="kpi-value">{formatNumber(total)}</div></div>
         </div>
+        <button className="btn btn-secondary mt-4" disabled={saving} onClick={saveSections}>{saving ? 'Saving…' : 'Save sections'}</button>
       </div>
       <h3 className="u-text-sm u-font-semibold mb-3">Flock events</h3>
       {loading ? <div className="skeleton" style={{ height: 120 }} /> : (

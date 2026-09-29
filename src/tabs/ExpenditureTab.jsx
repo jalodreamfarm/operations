@@ -8,7 +8,7 @@ const EXPENSE_CATEGORIES = [
   'Labour', 'Utilities', 'Transport', 'Maintenance', 'Equipment', 'Other',
 ];
 
-export default function ExpenditureTab({ actionsRef }) {
+export default function ExpenditureTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [rows, setRows] = useState([]);
@@ -25,8 +25,9 @@ export default function ExpenditureTab({ actionsRef }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Record expense</button>;
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Record expense</button>);
+    return () => setActions(null);
+  }, []);
 
   async function onDelete(row) {
     if (!row.id) { toast('error', 'Cannot delete: missing id'); return; }

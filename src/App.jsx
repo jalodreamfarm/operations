@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient.js';
 import { ConfirmProvider, Field, ToastProvider, useToast } from './components/ui.jsx';
 import DailyTab from './tabs/DailyTab.jsx';
@@ -30,8 +30,7 @@ function Shell() {
   const [authErr, setAuthErr] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('farmops_theme') || 'light');
-  const actionsRef = useRef(null);
-  const [, force] = useState(0);
+  const [actions, setActions] = useState(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -44,8 +43,7 @@ function Shell() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // re-render header actions when tab changes (tabs set actionsRef during render)
-  useEffect(() => { force((x) => x + 1); }, [tab]);
+  // header actions are owned by the active tab (cleared on unmount — no ghost buttons)
 
   async function login(e) {
     e.preventDefault();
@@ -105,7 +103,7 @@ function Shell() {
             <h1>Operations</h1>
             <p className="u-text-secondary u-text-sm">LUK54 Flock — daily farm operations</p>
           </div>
-          <div className="page-header-actions">{actionsRef.current}</div>
+          <div className="page-header-actions">{actions}</div>
         </div>
         <div className="tabs-bar">
           {TABS.map((t) => (
@@ -114,16 +112,16 @@ function Shell() {
           ))}
         </div>
         <div key={tab}>
-          {tab === 'daily' && <DailyTab actionsRef={actionsRef} />}
-          {tab === 'flock' && <FlockTab actionsRef={actionsRef} />}
-          {tab === 'feed' && <FeedTab actionsRef={actionsRef} />}
-          {tab === 'sales' && <SalesTab actionsRef={actionsRef} />}
-          {tab === 'expenditure' && <ExpenditureTab actionsRef={actionsRef} />}
-          {tab === 'health' && <HealthTab actionsRef={actionsRef} />}
+          {tab === 'daily' && <DailyTab setActions={setActions} />}
+          {tab === 'flock' && <FlockTab setActions={setActions} />}
+          {tab === 'feed' && <FeedTab setActions={setActions} />}
+          {tab === 'sales' && <SalesTab setActions={setActions} />}
+          {tab === 'expenditure' && <ExpenditureTab setActions={setActions} />}
+          {tab === 'health' && <HealthTab setActions={setActions} />}
           {tab === 'mortality' && <MortalityTab />}
-          {tab === 'inventory' && <InventoryTab actionsRef={actionsRef} />}
-          {tab === 'workers' && <WorkersTab actionsRef={actionsRef} />}
-          {tab === 'notes' && <NotesTab actionsRef={actionsRef} />}
+          {tab === 'inventory' && <InventoryTab setActions={setActions} />}
+          {tab === 'workers' && <WorkersTab setActions={setActions} />}
+          {tab === 'notes' && <NotesTab setActions={setActions} />}
         </div>
       </div>
     </>

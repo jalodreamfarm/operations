@@ -24,7 +24,7 @@ export function MortalityTab() {
   );
 }
 
-export function InventoryTab({ actionsRef }) {
+export function InventoryTab({ setActions }) {
   const toast = useToast();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +38,9 @@ export function InventoryTab({ actionsRef }) {
   }
   useEffect(() => { load(); }, []);
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Adjust stock</button>;
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Adjust stock</button>);
+    return () => setActions(null);
+  }, []);
 
   return (
     <>
@@ -81,7 +82,7 @@ function InventoryForm({ onClose, onSaved }) {
   );
 }
 
-export function WorkersTab({ actionsRef }) {
+export function WorkersTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [rows, setRows] = useState([]);
@@ -96,8 +97,9 @@ export function WorkersTab({ actionsRef }) {
   }
   useEffect(() => { load(); }, []);
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setEditing(null)}>+ Add worker</button>;
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setEditing(null)}>+ Add worker</button>);
+    return () => setActions(null);
+  }, []);
   async function onDelete(row) {
     const ok = await confirm({ title: 'Delete worker', message: 'Remove this worker record?', confirmLabel: 'Delete', danger: true });
     if (!ok) return;
@@ -161,7 +163,7 @@ function WorkerForm({ existing, onClose, onSaved }) {
   );
 }
 
-export function NotesTab({ actionsRef }) {
+export function NotesTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [rows, setRows] = useState([]);
@@ -176,8 +178,9 @@ export function NotesTab({ actionsRef }) {
   }
   useEffect(() => { load(); }, []);
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add note</button>;
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Add note</button>);
+    return () => setActions(null);
+  }, []);
   async function onDelete(row) {
     const ok = await confirm({ title: 'Delete note', message: 'Delete this note?', confirmLabel: 'Delete', danger: true });
     if (!ok) return;

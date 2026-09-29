@@ -10,7 +10,7 @@ const EGG_TYPES = [
   { id: 'Medium', defaultPrice: 10000 },
 ];
 
-export default function SalesTab({ actionsRef }) {
+export default function SalesTab({ setActions }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [rows, setRows] = useState([]);
@@ -27,8 +27,9 @@ export default function SalesTab({ actionsRef }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (actionsRef) actionsRef.current = <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Record sale</button>;
-  });
+    setActions(<button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Record sale</button>);
+    return () => setActions(null);
+  }, []);
 
   async function onDelete(row) {
     const ok = await confirm({ title: 'Delete sale', message: 'Delete this sale record? This cannot be undone.', confirmLabel: 'Delete', danger: true });
