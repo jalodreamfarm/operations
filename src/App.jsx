@@ -5,6 +5,7 @@ import DailyTab from './tabs/DailyTab.jsx';
 import FlockTab from './tabs/FlockTab.jsx';
 import FeedTab from './tabs/FeedTab.jsx';
 import SalesTab from './tabs/SalesTab.jsx';
+import ExpenditureTab from './tabs/ExpenditureTab.jsx';
 import HealthTab from './tabs/HealthTab.jsx';
 import { InventoryTab, MortalityTab, NotesTab, WorkersTab } from './tabs/OtherTabs.jsx';
 
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'flock', label: 'Flock' },
   { id: 'feed', label: 'Feed' },
   { id: 'sales', label: 'Sales' },
+  { id: 'expenditure', label: 'Expenditure' },
   { id: 'health', label: 'Health & Vaccination' },
   { id: 'mortality', label: 'Mortality' },
   { id: 'inventory', label: 'Inventory' },
@@ -116,6 +118,7 @@ function Shell() {
           {tab === 'flock' && <FlockTab actionsRef={actionsRef} />}
           {tab === 'feed' && <FeedTab actionsRef={actionsRef} />}
           {tab === 'sales' && <SalesTab actionsRef={actionsRef} />}
+          {tab === 'expenditure' && <ExpenditureTab actionsRef={actionsRef} />}
           {tab === 'health' && <HealthTab actionsRef={actionsRef} />}
           {tab === 'mortality' && <MortalityTab />}
           {tab === 'inventory' && <InventoryTab actionsRef={actionsRef} />}
