@@ -172,7 +172,7 @@ export default function ReportsTab({ setActions }) {
       {report && (
         <div className="report">
           <h2 style={{ margin: '0 0 4px' }}>Farm Report — {report.label}</h2>
-          <p className="u-text-sm u-text-secondary mb-4">LUK54 Flock · generated {formatDate(todayEAT())}</p>
+          <p className="u-text-sm u-text-secondary mb-4">Farm report · generated {formatDate(todayEAT())}</p>
 
           <h3 className="u-text-sm u-font-semibold mb-3">Production</h3>
           <div className="kpi-grid mb-4">

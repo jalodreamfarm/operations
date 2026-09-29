@@ -65,7 +65,7 @@ function Shell() {
           <div className="login-visual-shade" />
           <div className="login-visual-content">
             <h1 className="login-brand-name">Farm Operations</h1>
-            <p className="login-brand-sub">LUK54 Flock — daily farm operations</p>
+            <p className="login-brand-sub">Daily farm operations</p>
             <p className="login-brand-desc">Log production, feed, sales, health and staff — from any phone.</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ function Shell() {
           <div>
             <div className="breadcrumb"><span>Main</span><span>/</span><span>Operations</span></div>
             <h1>Operations</h1>
-            <p className="u-text-secondary u-text-sm">LUK54 Flock — daily farm operations</p>
+            <p className="u-text-secondary u-text-sm">Daily farm operations</p>
           </div>
           <div className="page-header-actions">{actions}</div>
         </div>
