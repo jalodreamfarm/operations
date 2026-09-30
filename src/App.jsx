@@ -32,15 +32,14 @@ function Shell() {
   const [authErr, setAuthErr] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('farmops_theme') || 'light');
   const [actions, setActions] = useState(null);
   const [profile, setProfile] = useState(null);
   const role = profile?.role || 'admin'; // default open until profile loads
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('farmops_theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', 'dark');
+    try { localStorage.setItem('farmops_theme', 'dark'); } catch (e) {}
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -77,40 +76,39 @@ function Shell() {
 
   if (!session) {
     return (
-      <div className="login-page">
-        <div className="login-visual">
-          <div className="login-visual-shade" />
-          <div className="login-visual-content">
-            <h1 className="login-brand-name">Farm Operations</h1>
-            <p className="login-brand-sub">Daily farm operations</p>
-            <p className="login-brand-desc">Log production, feed, sales, health and staff — from any phone.</p>
+      <div className="jalo-login">
+        <div className="jalo-card">
+          <div className="jalo-brand">
+            <div className="jalo-shade" />
+            <div className="jalo-brand-inner">
+              <img src="/logo.png" alt="Jalo Dream Farm — Feathers to Fortune" className="jalo-logo" />
+              <p>Feathers to Fortune — daily records for a thriving flock.</p>
+            </div>
           </div>
-        </div>
-        <div className="login-panel">
-          <div className="login-panel-inner">
-            <h2 className="login-title">Sign in</h2>
-            <p className="login-subtitle">Use your farm account to continue.</p>
+          <div className="jalo-form">
+            <h2>Welcome back</h2>
+            <p className="jalo-sub">Sign in to continue to your farm</p>
             <form onSubmit={login}>
               {authErr && <div className="form-error-global">{authErr}</div>}
-              <Field label="Email" type="email" required value={auth.email} onChange={(e) => setAuth({ ...auth, email: e.target.value })} />
-              <div className="form-group">
-                <label className="form-label">Password<span className="required">*</span></label>
-                <div className="password-field">
-                  <input className="form-input" type={showPw ? 'text' : 'password'} required
-                    value={auth.password} onChange={(e) => setAuth({ ...auth, password: e.target.value })} />
-                  <button type="button" className="password-toggle" aria-label={showPw ? 'Hide password' : 'Show password'}
-                    onClick={() => setShowPw(!showPw)}>
-                    {showPw ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="23" x2="23" y2="1" /></svg>
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                    )}
-                  </button>
-                </div>
+              <label className="jalo-label">Email</label>
+              <input className="jalo-input" type="email" required placeholder="you@farm.com"
+                value={auth.email} onChange={(e) => setAuth({ ...auth, email: e.target.value })} />
+              <label className="jalo-label">Password</label>
+              <div className="jalo-password">
+                <input className="jalo-input" type={showPw ? 'text' : 'password'} required placeholder="••••••••"
+                  value={auth.password} onChange={(e) => setAuth({ ...auth, password: e.target.value })} />
+                <button type="button" className="jalo-eye" aria-label={showPw ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPw(!showPw)}>
+                  {showPw ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="23" x2="23" y2="1" /></svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                  )}
+                </button>
               </div>
-              <button className="login-submit" disabled={authBusy}>{authBusy ? 'Signing in…' : 'Sign in'}</button>
+              <button className="jalo-submit" disabled={authBusy}>{authBusy ? 'Signing in…' : 'Sign in'}</button>
             </form>
-            <p className="login-secure">Secure access for your farm operations.</p>
+            <p className="jalo-secure">🔒 Encrypted &nbsp;•&nbsp; Role-based access</p>
           </div>
         </div>
       </div>
@@ -120,12 +118,12 @@ function Shell() {
   return (
     <>
       <div className="top-strip">
-        <span className="brand">Farm Operations</span>
+        <span className="brand" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/icon-192.png" alt="" style={{ width: 28, height: 28, borderRadius: 7 }} />
+          Jalo Dream Farm
+          {role === 'vet' && <span className="badge badge-info" style={{ marginLeft: 2 }}>Vet</span>}
+        </span>
         <span className="row">
-          <button className="btn btn-sm" style={{ background: '#ffffff22', color: '#fff' }}
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-            {theme === 'dark' ? 'Light' : 'Dark'}
-          </button>
           <button className="btn btn-sm" style={{ background: '#ffffff22', color: '#fff' }}
             onClick={() => supabase.auth.signOut()}>Sign out</button>
         </span>
