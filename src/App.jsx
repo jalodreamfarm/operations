@@ -34,6 +34,8 @@ function Shell() {
   const [showPw, setShowPw] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('farmops_theme') || 'light');
   const [actions, setActions] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const role = profile?.role || 'admin'; // default open until profile loads
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -41,10 +43,25 @@ function Shell() {
   }, [theme]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      if (data.session) loadProfile(data.session.user.id);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+      if (s) loadProfile(s.user.id);
+      else setProfile(null);
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  async function loadProfile(uid) {
+    const { data } = await supabase.from('profiles').select('*').eq('id', uid).single();
+    setProfile(data || null);
+    if (data?.role === 'vet') setTab('daily');
+  }
+
+  const visibleTabs = role === 'vet' ? TABS.filter((t) => t.id === 'daily' || t.id === 'health') : TABS;
 
   // header actions are owned by the active tab (cleared on unmount — no ghost buttons)
 
@@ -123,13 +140,16 @@ function Shell() {
           <div className="page-header-actions">{actions}</div>
         </div>
         <div className="tabs-bar">
-          {TABS.map((t) => (
+          {visibleTabs.map((t) => (
             <button key={t.id} className={'btn btn-sm ' + (t.id === tab ? 'btn-primary' : 'btn-ghost')}
-              onClick={() => { setTab(t.id); }}>{t.label}</button>
+              onClick={() => { setActions(null); setTab(t.id); }}>{t.label}</button>
           ))}
         </div>
+        {role === 'vet' && (
+          <div className="card pad-3 mb-4"><span className="u-text-xs u-text-muted">Vet access — Daily Log is read-only; Health & Vaccination is fully editable.</span></div>
+        )}
         <div key={tab}>
-          {tab === 'daily' && <DailyTab setActions={setActions} />}
+          {tab === 'daily' && <DailyTab setActions={setActions} writable={role !== 'vet'} />}
           {tab === 'flock' && <FlockTab setActions={setActions} />}
           {tab === 'feed' && <FeedTab setActions={setActions} />}
           {tab === 'sales' && <SalesTab setActions={setActions} />}
