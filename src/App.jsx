@@ -118,8 +118,8 @@ function Shell() {
   return (
     <>
       <div className="top-strip">
-        <span className="brand" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/icon-192.png" alt="" style={{ width: 28, height: 28, borderRadius: 7 }} />
+        <span className="brand" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img src="/icon-192.png" alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />
           Jalo Dream Farm
           {role === 'vet' && <span className="badge badge-info" style={{ marginLeft: 2 }}>Vet</span>}
         </span>

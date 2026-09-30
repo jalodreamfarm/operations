@@ -77,10 +77,11 @@ body { margin: 0; font-family: var(--font-sans); background: var(--color-bg); co
 .breadcrumb { display: flex; gap: 6px; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 2px; }
 .page-header-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .tabs-bar { display: flex; gap: var(--space-1); flex-wrap: wrap; margin-bottom: var(--space-4); }
-.top-strip { background: #123f2a; color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 30; }
+.top-strip { background: #123f2a; color: #fff; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 30; }
 [data-theme="dark"] .top-strip { background: #0c1f17; }
-.top-strip .brand { font-weight: 700; }
-.top-strip .row { display: flex; gap: 8px; }
+.top-strip .brand { font-weight: 600; font-size: 13px; letter-spacing: 0.01em; }
+.top-strip .row { display: flex; gap: 8px; align-items: center; }
+.top-strip .btn-sm { height: 28px; font-size: 12px; }
 
 /* Buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500; border: 0; cursor: pointer; white-space: nowrap; font-family: inherit; }
