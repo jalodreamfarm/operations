@@ -32,14 +32,15 @@ function Shell() {
   const [authErr, setAuthErr] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem('farmops_theme') || 'dark'; } catch (e) { return 'dark'; } });
   const [actions, setActions] = useState(null);
   const [profile, setProfile] = useState(null);
   const role = profile?.role || 'admin'; // default open until profile loads
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    try { localStorage.setItem('farmops_theme', 'dark'); } catch (e) {}
-  }, []);
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('farmops_theme', theme); } catch (e) {}
+  }, [theme]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -124,6 +125,10 @@ function Shell() {
           {role === 'vet' && <span className="badge badge-info" style={{ marginLeft: 2 }}>Vet</span>}
         </span>
         <span className="row">
+          <button className="btn btn-sm" style={{ background: '#ffffff22', color: '#fff' }}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+            {theme === 'dark' ? '☀ Light' : '🌙 Dark'}
+          </button>
           <button className="btn btn-sm" style={{ background: '#ffffff22', color: '#fff' }}
             onClick={() => supabase.auth.signOut()}>Sign out</button>
         </span>
