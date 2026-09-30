@@ -193,7 +193,8 @@ body { margin: 0; font-family: var(--font-sans); background: var(--color-bg); co
 .jalo-secure { margin: 18px 0 0; text-align: center; color: rgba(255, 255, 255, 0.45); font-size: 12px; }
 @media (max-width: 760px) {
   .jalo-card { grid-template-columns: 1fr; }
-  .jalo-brand { padding: 26px 22px; }
+  .jalo-brand { padding: 26px 22px; justify-content: center; text-align: center; }
+  .jalo-brand-inner { align-items: center; }
   .jalo-logo { max-width: 220px; margin-bottom: 0; }
   .jalo-brand-inner p { display: none; }
   .jalo-form { padding: 28px 22px; }
