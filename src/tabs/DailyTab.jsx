@@ -15,6 +15,7 @@ export default function DailyTab({ setActions, writable = true }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editNotes, setEditNotes] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -84,17 +85,42 @@ export default function DailyTab({ setActions, writable = true }) {
               : '—' },
           ]}
           rows={rows}
-          actions={writable ? [{ id: 'delete', label: 'Delete', danger: true }] : null}
-          onAction={(a, row) => { if (a === 'delete') onDelete(row); }}
+          actions={writable ? [{ id: 'notes', label: 'Notes' }, { id: 'delete', label: 'Delete', danger: true }] : null}
+          onAction={(a, row) => { if (a === 'delete') onDelete(row); if (a === 'notes') setEditNotes(row); }}
           emptyMessage="No daily logs yet. Click Log Day to add one."
         />
       )}
+      {editNotes && <NotesEdit row={editNotes}
+        onClose={() => setEditNotes(null)}
+        onSaved={() => { setEditNotes(null); load(); }}
+      />}
       {showForm && <DailyForm
         existingRows={rows}
         onClose={() => setShowForm(false)}
         onSaved={() => { setShowForm(false); load(); }}
       />}
     </>
+  );
+}
+
+function NotesEdit({ row, onClose, onSaved }) {
+  const toast = useToast();
+  const [notes, setNotes] = useState(row.notes || '');
+  const [busy, setBusy] = useState(false);
+  async function save() {
+    setBusy(true);
+    const { error } = await supabase.from('daily_production').update({ notes }).eq('id', row.id);
+    setBusy(false);
+    if (error) toast('error', error.message);
+    else { toast('success', 'Notes saved'); onSaved(); }
+  }
+  return (
+    <Modal title={'Notes — ' + (row.date || '')} onClose={onClose}
+      footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save notes'}</button></>}>
+      <p className="u-text-xs u-text-muted" style={{ marginBottom: 8 }}>Only the notes can be changed here — all numbers stay locked.</p>
+      <Field label="Notes / observations" type="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} />
+    </Modal>
   );
 }
 
