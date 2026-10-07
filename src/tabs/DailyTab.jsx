@@ -79,6 +79,9 @@ export default function DailyTab({ setActions, writable = true }) {
               const b = Number(r.opening_birds || 0), e = Number(r.eggs_collected || 0);
               return e > 0 && b > 0 ? formatNumber((e / b) * 100, 1) + '%' : '—';
             } },
+            { key: 'notes', label: 'Notes', accessor: (r) => r.notes
+              ? <span title={r.notes}>{r.notes.length > 32 ? r.notes.slice(0, 32) + '…' : r.notes}</span>
+              : '—' },
           ]}
           rows={rows}
           actions={writable ? [{ id: 'delete', label: 'Delete', danger: true }] : null}
@@ -87,6 +90,7 @@ export default function DailyTab({ setActions, writable = true }) {
         />
       )}
       {showForm && <DailyForm
+        existingRows={rows}
         onClose={() => setShowForm(false)}
         onSaved={() => { setShowForm(false); load(); }}
       />}
@@ -94,26 +98,40 @@ export default function DailyTab({ setActions, writable = true }) {
   );
 }
 
-function DailyForm({ onClose, onSaved }) {
+function DailyForm({ onClose, onSaved, existingRows }) {
   const toast = useToast();
   const [sections, setSections] = useState([{ section_id: 'Combined', label: 'Combined', bird_count: 0 }]);
   const [f, setF] = useState({ date: todayEAT(), section: 'Combined', opening_birds: '0', mortality: '0', closing_birds: '', eggs_trays: '0', breakages: '0', eggs_lost: '0', feed_issued_kg: '0', notes: '' });
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
+  // carry-forward: opening defaults to the last closing, so mortality sticks
+  function openingFor(sectionId, secs, logs) {
+    const same = (logs || []).filter((r) => (r.section || 'Combined') === sectionId)
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const pool = same.length ? same : (logs || []).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    if (pool.length) {
+      const last = pool[0];
+      const c = last.closing_birds ?? last.opening_birds;
+      if (c != null && c !== '') return String(c);
+    }
+    const found = (secs || []).find((s) => s.section_id === sectionId);
+    return String(found?.bird_count ?? 0);
+  }
+
   useEffect(() => {
     supabase.from('flock_sections').select('*').order('section_id').then(({ data }) => {
       if (data && data.length) {
         setSections(data);
-        setF((prev) => ({ ...prev, section: data[0].section_id, opening_birds: String(data[0].bird_count ?? 0) }));
+        const sec = data[0].section_id;
+        setF((prev) => ({ ...prev, section: sec, opening_birds: openingFor(sec, data, existingRows) }));
       }
     });
   }, []);
 
   function onSectionChange(e) {
     const id = e.target.value;
-    const found = sections.find((s) => s.section_id === id);
-    setF({ ...f, section: id, opening_birds: found ? String(found.bird_count ?? 0) : f.opening_birds });
+    setF({ ...f, section: id, opening_birds: openingFor(id, sections, existingRows) });
   }
 
   const birds = Number(f.opening_birds) || 0;
