@@ -66,6 +66,9 @@ export default function ExpenditureTab({ setActions }) {
             { key: 'sub', label: 'Detail', accessor: (r) => r.sub_category || '—' },
             { key: 'amt', label: 'Amount', accessor: (r) => formatUGX(r.amount) },
             { key: 'sup', label: 'Supplier', accessor: (r) => r.supplier || '—' },
+            { key: 'notes', label: 'Notes', accessor: (r) => r.notes
+              ? <span title={r.notes}>{r.notes.length > 32 ? r.notes.slice(0, 32) + '…' : r.notes}</span>
+              : '—' },
           ]}
           rows={rows}
           actions={[{ id: 'edit', label: 'Edit' }, { id: 'delete', label: 'Delete', danger: true }]}

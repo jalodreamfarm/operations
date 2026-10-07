@@ -59,6 +59,9 @@ export default function SalesTab({ setActions }) {
             { key: 'price', label: 'Price/tray', accessor: (r) => formatUGX(r.unit_price) },
             { key: 'rev', label: 'Revenue', accessor: (r) => formatUGX(r.total_revenue) },
             { key: 'pay', label: 'Payment', accessor: (r) => r.payment_status || '—' },
+            { key: 'notes', label: 'Notes', accessor: (r) => r.notes
+              ? <span title={r.notes}>{r.notes.length > 32 ? r.notes.slice(0, 32) + '…' : r.notes}</span>
+              : '—' },
           ]}
           rows={rows}
           actions={[{ id: 'edit', label: 'Edit' }, { id: 'delete', label: 'Delete', danger: true }]}
