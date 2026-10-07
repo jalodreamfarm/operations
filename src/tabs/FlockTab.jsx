@@ -44,8 +44,21 @@ export default function FlockTab({ setActions }) {
     load();
   }
 
-  async function onDelete(row) {
-    const ok = await confirm({ title: 'Delete flock event', message: 'Delete this flock event?', confirmLabel: 'Delete', danger: true });
+  async function addSection() {
+    const used = new Set(sections.map((s) => s.section_id));
+    let letter = 'D';
+    for (let c = 68; c <= 90; c++) {
+      if (!used.has(String.fromCharCode(c))) { letter = String.fromCharCode(c); break; }
+    }
+    if (used.has(letter)) { toast('error', 'No more section letters available'); return; }
+    const { error } = await supabase.from('flock_sections').insert({
+      project_id: 'JALO', section_id: letter, label: 'Section ' + letter, bird_count: 0,
+    });
+    if (error) toast('error', error.message);
+    else { toast('success', 'Section ' + letter + ' added — set its label and birds, then Save sections'); load(); }
+  }
+
+  async function onDelete(row) {    const ok = await confirm({ title: 'Delete flock event', message: 'Delete this flock event?', confirmLabel: 'Delete', danger: true });
     if (!ok) return;
     const { error } = await supabase.from('flock_events').delete().eq('id', row.id);
     if (error) toast('error', error.message);
@@ -68,6 +81,7 @@ export default function FlockTab({ setActions }) {
             <div className="kpi-value">{formatNumber(total)}</div></div>
         </div>
         <button className="btn btn-secondary mt-4" disabled={saving} onClick={saveSections}>{saving ? 'Saving…' : 'Save sections'}</button>
+        <button className="btn btn-ghost mt-4" style={{ marginLeft: 8 }} onClick={addSection}>+ Add section</button>
       </div>
       <h3 className="u-text-sm u-font-semibold mb-3">Flock events</h3>
       {loading ? <div className="skeleton" style={{ height: 120 }} /> : (
