@@ -10,6 +10,7 @@ export default function FlockTab({ setActions }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showRemove, setShowRemove] = useState(false);
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -82,6 +83,7 @@ export default function FlockTab({ setActions }) {
         </div>
         <button className="btn btn-secondary mt-4" disabled={saving} onClick={saveSections}>{saving ? 'Saving…' : 'Save sections'}</button>
         <button className="btn btn-ghost mt-4" style={{ marginLeft: 8 }} onClick={addSection}>+ Add section</button>
+        <button className="btn btn-ghost mt-4" style={{ marginLeft: 8 }} onClick={() => setShowRemove(true)}>- Remove section</button>
       </div>
       <h3 className="u-text-sm u-font-semibold mb-3">Flock events</h3>
       {loading ? <div className="skeleton" style={{ height: 120 }} /> : (
@@ -99,7 +101,38 @@ export default function FlockTab({ setActions }) {
         />
       )}
       {showForm && <FlockForm onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); load(); }} />}
+      {showRemove && <RemoveSection sections={sections} onClose={() => setShowRemove(false)} onSaved={() => { setShowRemove(false); load(); }} />}
     </>
+  );
+}
+
+function RemoveSection({ sections, onClose, onSaved }) {
+  const toast = useToast();
+  const [secId, setSecId] = useState(sections.length ? sections[0].section_id : '');
+  const [busy, setBusy] = useState(false);
+  const target = sections.find((s) => s.section_id === secId);
+  async function remove() {
+    if (!target) { toast('error', 'Pick a section first'); return; }
+    setBusy(true);
+    const { error } = await supabase.from('flock_sections').delete().eq('id', target.id);
+    setBusy(false);
+    if (error) toast('error', error.message);
+    else { toast('success', 'Section ' + (target.section_id || '') + ' removed — other sections untouched'); onSaved(); }
+  }
+  return (
+    <Modal title="Remove section" onClose={onClose}
+      footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-danger" disabled={busy || !target} onClick={remove}>{busy ? 'Removing…' : 'Remove'}</button></>}>
+      <p className="u-text-xs u-text-muted" style={{ marginBottom: 8 }}>Only the chosen section is deleted. Other sections and past daily logs are not affected.</p>
+      <div className="u-text-sm" style={{ marginBottom: 8 }}>
+        {sections.map((s) => (
+          <label key={s.id} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0' }}>
+            <input type="radio" name="rm-sec" checked={secId === s.section_id} onChange={() => setSecId(s.section_id)} />
+            <span><strong>{s.section_id}</strong> — {s.label || ''} ({s.bird_count ?? 0} birds)</span>
+          </label>
+        ))}
+      </div>
+    </Modal>
   );
 }
 
