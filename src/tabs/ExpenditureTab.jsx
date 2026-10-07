@@ -14,6 +14,7 @@ export default function ExpenditureTab({ setActions }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -67,19 +68,23 @@ export default function ExpenditureTab({ setActions }) {
             { key: 'sup', label: 'Supplier', accessor: (r) => r.supplier || '—' },
           ]}
           rows={rows}
-          actions={[{ id: 'delete', label: 'Delete', danger: true }]}
-          onAction={(a, row) => { if (a === 'delete') onDelete(row); }}
+          actions={[{ id: 'edit', label: 'Edit' }, { id: 'delete', label: 'Delete', danger: true }]}
+          onAction={(a, row) => { if (a === 'delete') onDelete(row); if (a === 'edit') setEditing(row); }}
           emptyMessage="No expenses recorded."
         />
       )}
       {showForm && <ExpenseForm onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); load(); }} />}
+      {editing && <ExpenseForm existing={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
     </>
   );
 }
 
-function ExpenseForm({ onClose, onSaved }) {
+function ExpenseForm({ onClose, onSaved, existing }) {
   const toast = useToast();
-  const [f, setF] = useState({ date: todayEAT(), category: 'Feeds', sub_category: '', amount: '', supplier: '', notes: '' });
+  const [f, setF] = useState(existing ? {
+    date: existing.date || '', category: existing.category || 'Feeds', sub_category: existing.sub_category || '',
+    amount: String(existing.amount ?? ''), supplier: existing.supplier || '', notes: existing.notes || '',
+  } : { date: todayEAT(), category: 'Feeds', sub_category: '', amount: '', supplier: '', notes: '' });
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [busyLabel, setBusyLabel] = useState('Save');
@@ -89,7 +94,7 @@ function ExpenseForm({ onClose, onSaved }) {
     if (!f.date || !f.category || !f.amount) { toast('error', 'Date, category and amount are required'); return; }
     setBusy(true);
     setBusyLabel('Saving…');
-    let documentId = '';
+    let documentId = existing ? (existing.document_id || '') : '';
     if (file) {
       setBusyLabel('Uploading…');
       const path = 'JALO/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -98,18 +103,21 @@ function ExpenseForm({ onClose, onSaved }) {
       documentId = path;
       setBusyLabel('Saving…');
     }
-    const { error } = await supabase.from('expenses').insert({
+    const record = {
       project_id: 'JALO', date: f.date, category: f.category,
       sub_category: f.sub_category || '', amount: Number(f.amount) || 0,
       supplier: f.supplier || '', document_id: documentId, notes: f.notes || '',
-    });
+    };
+    const { error } = existing
+      ? await supabase.from('expenses').update(record).eq('id', existing.id)
+      : await supabase.from('expenses').insert(record);
     setBusy(false);
     if (error) toast('error', error.message);
-    else { toast('success', 'Expense recorded'); onSaved(); }
+    else { toast('success', existing ? 'Expense updated' : 'Expense recorded'); onSaved(); }
   }
 
   return (
-    <Modal title="Record expense" onClose={onClose}
+    <Modal title={existing ? 'Edit expense' : 'Record expense'} onClose={onClose}
       footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? busyLabel : 'Save'}</button></>}>
       <Field label="Date" type="date" required value={f.date} onChange={set('date')} />

@@ -15,6 +15,7 @@ export default function HealthTab({ setActions }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showTreatment, setShowTreatment] = useState(false);
+  const [editingTreatment, setEditingTreatment] = useState(null);
   const [editingSched, setEditingSched] = useState(undefined);
 
   async function load() {
@@ -123,11 +124,12 @@ export default function HealthTab({ setActions }) {
           { key: 'p', label: 'Product', accessor: (r) => r.product },
           { key: 'n', label: 'Notes', accessor: (r) => r.notes || '—' },
         ]} rows={events}
-          actions={[{ id: 'delete', label: 'Delete', danger: true }]}
-          onAction={(a, row) => { if (a === 'delete') onDeleteTreatment(row); }}
+          actions={[{ id: 'edit', label: 'Edit' }, { id: 'delete', label: 'Delete', danger: true }]}
+          onAction={(a, row) => { if (a === 'delete') onDeleteTreatment(row); if (a === 'edit') setEditingTreatment(row); }}
           emptyMessage="No treatments logged." />
       )}
       {showTreatment && <HealthForm onClose={() => setShowTreatment(false)} onSaved={() => { setShowTreatment(false); load(); }} />}
+      {editingTreatment && <HealthForm existing={editingTreatment} onClose={() => setEditingTreatment(null)} onSaved={() => { setEditingTreatment(null); load(); }} />}
       {editingSched !== undefined && <ScheduleForm existing={editingSched}
         onClose={() => setEditingSched(undefined)}
         onSaved={() => { setEditingSched(undefined); load(); }} />}
@@ -182,11 +184,14 @@ function ScheduleForm({ existing, onClose, onSaved }) {
   );
 }
 
-function HealthForm({ onClose, onSaved }) {
+function HealthForm({ onClose, onSaved, existing }) {
   const toast = useToast();
   const [types, setTypes] = useState(DEFAULT_TYPES);
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
-  const [f, setF] = useState({ date: todayEAT(), type: 'Vaccination', customType: '', product: '', customProduct: '', week: '', notes: '' });
+  const [f, setF] = useState(existing ? {
+    date: existing.date || '', type: existing.type || 'Vaccination', customType: '',
+    product: existing.product || '', customProduct: '', week: '', notes: existing.notes || '',
+  } : { date: todayEAT(), type: 'Vaccination', customType: '', product: '', customProduct: '', week: '', notes: '' });
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
@@ -215,28 +220,36 @@ function HealthForm({ onClose, onSaved }) {
     }
     if (!type || !product) { toast('error', 'Type and product required'); return; }
     setBusy(true);
-    const { error } = await supabase.from('health_events').insert({
+    const record = {
       project_id: 'JALO', date: f.date, type, product,
       notes: f.notes || '',
-    });
-    if (!error && type === 'Vaccination' && f.week) {
+    };
+    const { error } = existing
+      ? await supabase.from('health_events').update(record).eq('id', existing.id)
+      : await supabase.from('health_events').insert(record);
+    if (!error && !existing && type === 'Vaccination' && f.week) {
       await supabase.from('vaccination_schedule')
         .update({ status: 'Completed' })
         .eq('project_id', 'JALO').eq('week', Number(f.week)).ilike('vaccine', product.split(' ')[0] + '%');
     }
     setBusy(false);
     if (error) toast('error', error.message);
-    else { toast('success', 'Treatment logged'); onSaved(); }
+    else { toast('success', existing ? 'Treatment updated' : 'Treatment logged'); onSaved(); }
   }
 
+  const typeOpts = [...types];
+  if (existing && existing.type && !typeOpts.includes(existing.type)) typeOpts.push(existing.type);
+  const productOpts = ['', ...products];
+  if (existing && existing.product && !productOpts.includes(existing.product)) productOpts.push(existing.product);
+
   return (
-    <Modal title="Log treatment" onClose={onClose}
+    <Modal title={existing ? 'Edit treatment' : 'Log treatment'} onClose={onClose}
       footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button></>}>
       <Field label="Date" type="date" required value={f.date} onChange={set('date')} />
-      <Field label="Type" type="select" required value={f.type} onChange={set('type')} options={[...types, ADD_NEW]} />
+      <Field label="Type" type="select" required value={f.type} onChange={set('type')} options={[...typeOpts, ADD_NEW]} />
       {f.type === ADD_NEW && <Field label="New type (if adding)" hint="Only fill if you chose Add new" value={f.customType} onChange={set('customType')} />}
-      <Field label="Product" type="select" required value={f.product} onChange={set('product')} options={['', ...products, ADD_NEW]} />
+      <Field label="Product" type="select" required value={f.product} onChange={set('product')} options={[...productOpts, ADD_NEW]} />
       {(f.product === ADD_NEW || f.product === '') && <Field label="New product (if adding)" hint="Only fill if you chose Add new — any disease or medicine name" value={f.customProduct} onChange={set('customProduct')} />}
       <Field label="Week" type="number" value={f.week} onChange={set('week')} />
       <Field label="Notes" type="textarea" value={f.notes} onChange={set('notes')} />

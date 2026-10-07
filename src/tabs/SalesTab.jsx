@@ -16,6 +16,7 @@ export default function SalesTab({ setActions }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -60,19 +61,26 @@ export default function SalesTab({ setActions }) {
             { key: 'pay', label: 'Payment', accessor: (r) => r.payment_status || '—' },
           ]}
           rows={rows}
-          actions={[{ id: 'delete', label: 'Delete', danger: true }]}
-          onAction={(a, row) => { if (a === 'delete') onDelete(row); }}
+          actions={[{ id: 'edit', label: 'Edit' }, { id: 'delete', label: 'Delete', danger: true }]}
+          onAction={(a, row) => { if (a === 'delete') onDelete(row); if (a === 'edit') setEditing(row); }}
           emptyMessage="No sales recorded yet."
         />
       )}
       {showForm && <SaleForm onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); load(); }} />}
+      {editing && <SaleForm existing={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
     </>
   );
 }
 
-function SaleForm({ onClose, onSaved }) {
+function SaleForm({ onClose, onSaved, existing }) {
   const toast = useToast();
-  const [f, setF] = useState({
+  const [f, setF] = useState(existing ? {
+    date: existing.date || '', sale_category: existing.sale_category || 'Eggs', egg_type: existing.egg_type || 'Normal',
+    customer: existing.customer || '', quantity_trays: String(existing.quantity_trays ?? ''),
+    unit_price: String(existing.unit_price ?? ''), breakage_trays_sold: String(existing.breakage_trays_sold ?? 0),
+    damaged_trays_sold: String(existing.damaged_trays_sold ?? 0), lost_trays: String(existing.lost_trays ?? 0),
+    payment_status: existing.payment_status || 'Cash', payment_ref: existing.payment_ref || '', notes: existing.notes || '',
+  } : {
     date: todayEAT(), sale_category: 'Eggs', egg_type: 'Normal', customer: '',
     quantity_trays: '', unit_price: '11000', breakage_trays_sold: '0', damaged_trays_sold: '0',
     lost_trays: '0', payment_status: 'Cash', payment_ref: '', notes: '',
@@ -91,7 +99,7 @@ function SaleForm({ onClose, onSaved }) {
     if (!f.date || !f.quantity_trays || !f.unit_price) { toast('error', 'Date, quantity and price are required'); return; }
     setBusy(true);
     setBusyLabel('Saving…');
-    let documentId = '';
+    let documentId = existing ? (existing.document_id || '') : '';
     if (file) {
       setBusyLabel('Uploading…');
       const path = 'JALO/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -102,7 +110,7 @@ function SaleForm({ onClose, onSaved }) {
     }
     const trays = Number(f.quantity_trays) || 0;
     const price = Number(f.unit_price) || 0;
-    const { error } = await supabase.from('sales').insert({
+    const record = {
       project_id: 'JALO', date: f.date, customer: f.customer || '',
       quantity_trays: trays, quantity_eggs: trays * TRAY, unit_price: price,
       total_revenue: trays * price, sale_category: f.sale_category, egg_type: f.egg_type,
@@ -110,14 +118,17 @@ function SaleForm({ onClose, onSaved }) {
       breakage_trays_sold: Number(f.breakage_trays_sold) || 0,
       damaged_trays_sold: Number(f.damaged_trays_sold) || 0,
       lost_trays: Number(f.lost_trays) || 0, notes: f.notes || '', document_id: documentId,
-    });
+    };
+    const { error } = existing
+      ? await supabase.from('sales').update(record).eq('id', existing.id)
+      : await supabase.from('sales').insert(record);
     setBusy(false);
     if (error) toast('error', error.message);
-    else { toast('success', 'Sale recorded'); onSaved(); }
+    else { toast('success', existing ? 'Sale updated' : 'Sale recorded'); onSaved(); }
   }
 
   return (
-    <Modal title="Record sale" size="lg" onClose={onClose}
+    <Modal title={existing ? 'Edit sale' : 'Record sale'} size="lg" onClose={onClose}
       footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? busyLabel : 'Save'}</button></>}>
       <Field label="Date" type="date" required value={f.date} onChange={set('date')} />

@@ -15,7 +15,7 @@ export default function DailyTab({ setActions, writable = true }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editNotes, setEditNotes] = useState(null);
+  const [editing, setEditing] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -85,14 +85,16 @@ export default function DailyTab({ setActions, writable = true }) {
               : '—' },
           ]}
           rows={rows}
-          actions={writable ? [{ id: 'notes', label: 'Notes' }, { id: 'delete', label: 'Delete', danger: true }] : null}
-          onAction={(a, row) => { if (a === 'delete') onDelete(row); if (a === 'notes') setEditNotes(row); }}
+          actions={writable ? [{ id: 'edit', label: 'Edit' }, { id: 'delete', label: 'Delete', danger: true }] : null}
+          onAction={(a, row) => { if (a === 'delete') onDelete(row); if (a === 'edit') setEditing(row); }}
           emptyMessage="No daily logs yet. Click Log Day to add one."
         />
       )}
-      {editNotes && <NotesEdit row={editNotes}
-        onClose={() => setEditNotes(null)}
-        onSaved={() => { setEditNotes(null); load(); }}
+      {editing && <DailyForm
+        existing={editing}
+        existingRows={rows}
+        onClose={() => setEditing(null)}
+        onSaved={() => { setEditing(null); load(); }}
       />}
       {showForm && <DailyForm
         existingRows={rows}
@@ -103,31 +105,17 @@ export default function DailyTab({ setActions, writable = true }) {
   );
 }
 
-function NotesEdit({ row, onClose, onSaved }) {
-  const toast = useToast();
-  const [notes, setNotes] = useState(row.notes || '');
-  const [busy, setBusy] = useState(false);
-  async function save() {
-    setBusy(true);
-    const { error } = await supabase.from('daily_production').update({ notes }).eq('id', row.id);
-    setBusy(false);
-    if (error) toast('error', error.message);
-    else { toast('success', 'Notes saved'); onSaved(); }
-  }
-  return (
-    <Modal title={'Notes — ' + (row.date || '')} onClose={onClose}
-      footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-        <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save notes'}</button></>}>
-      <p className="u-text-xs u-text-muted" style={{ marginBottom: 8 }}>Only the notes can be changed here — all numbers stay locked.</p>
-      <Field label="Notes / observations" type="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} />
-    </Modal>
-  );
-}
-
-function DailyForm({ onClose, onSaved, existingRows }) {
+function DailyForm({ onClose, onSaved, existingRows, existing }) {
   const toast = useToast();
   const [sections, setSections] = useState([{ section_id: 'Combined', label: 'Combined', bird_count: 0 }]);
-  const [f, setF] = useState({ date: todayEAT(), section: 'Combined', opening_birds: '0', mortality: '0', closing_birds: '', eggs_trays: '0', breakages: '0', eggs_lost: '0', feed_issued_kg: '0', notes: '' });
+  const [f, setF] = useState(existing ? {
+    date: existing.date || '', section: existing.section || 'Combined',
+    opening_birds: String(existing.opening_birds ?? ''), mortality: String(existing.mortality ?? 0),
+    closing_birds: existing.closing_birds != null ? String(existing.closing_birds) : '',
+    eggs_trays: String(existing.eggs_trays ?? 0), breakages: String(existing.breakages ?? 0),
+    eggs_lost: String(existing.eggs_lost ?? 0), feed_issued_kg: String(existing.feed_issued_kg ?? 0),
+    notes: existing.notes || '',
+  } : { date: todayEAT(), section: 'Combined', opening_birds: '0', mortality: '0', closing_birds: '', eggs_trays: '0', breakages: '0', eggs_lost: '0', feed_issued_kg: '0', notes: '' });
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
@@ -146,6 +134,12 @@ function DailyForm({ onClose, onSaved, existingRows }) {
   }
 
   useEffect(() => {
+    if (existing) {
+      supabase.from('flock_sections').select('*').order('section_id').then(({ data }) => {
+        if (data && data.length) setSections(data);
+      });
+      return;
+    }
     supabase.from('flock_sections').select('*').order('section_id').then(({ data }) => {
       if (data && data.length) {
         setSections(data);
@@ -183,14 +177,16 @@ function DailyForm({ onClose, onSaved, existingRows }) {
       feed_issued_kg: Number(f.feed_issued_kg) || 0,
       notes: f.notes || '',
     };
-    const { error } = await supabase.from('daily_production').insert(payload);
+    const { error } = existing
+      ? await supabase.from('daily_production').update(payload).eq('id', existing.id)
+      : await supabase.from('daily_production').insert(payload);
     setBusy(false);
     if (error) toast('error', error.message);
-    else { toast('success', 'Daily log saved'); onSaved(); }
+    else { toast('success', existing ? 'Daily log updated' : 'Daily log saved'); onSaved(); }
   }
 
   return (
-    <Modal title="Daily production log" size="lg" onClose={onClose}
+    <Modal title={existing ? 'Edit daily log' : 'Daily production log'} size="lg" onClose={onClose}
       footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button className="btn btn-primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button></>}>
       <Field label="Date" type="date" required value={f.date} onChange={set('date')} />
