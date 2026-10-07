@@ -81,9 +81,11 @@ export default function FlockTab({ setActions }) {
           <div className="card kpi-card"><div className="kpi-label">Total birds (all sections)</div>
             <div className="kpi-value">{formatNumber(total)}</div></div>
         </div>
-        <button className="btn btn-secondary mt-4" disabled={saving} onClick={saveSections}>{saving ? 'Saving…' : 'Save sections'}</button>
-        <button className="btn btn-ghost mt-4" style={{ marginLeft: 8 }} onClick={addSection}>+ Add section</button>
-        <button className="btn btn-ghost mt-4" style={{ marginLeft: 8 }} onClick={() => setShowRemove(true)}>- Remove section</button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+          <button className="btn btn-secondary" disabled={saving} onClick={saveSections}>{saving ? 'Saving…' : 'Save sections'}</button>
+          <button className="btn btn-secondary" onClick={addSection}>+ Add section</button>
+          <button className="btn btn-secondary" onClick={() => setShowRemove(true)}>- Remove section</button>
+        </div>
       </div>
       <h3 className="u-text-sm u-font-semibold mb-3">Flock events</h3>
       {loading ? <div className="skeleton" style={{ height: 120 }} /> : (
